@@ -10,20 +10,8 @@ const int ROAD_SIZE = 10;
 
 
 // --------------------------------------------------
-// TILE AREA
+// BOARD DIMENSIONS
 // --------------------------------------------------
-//
-// 12 full columns = 12 * 60
-// 2 half columns  = 2 * 30
-// 13 internal roads = 13 * 10
-//
-// Width = 910 pixels
-//
-// 6 rows = 6 * 60
-// 5 internal roads = 5 * 10
-//
-// Height = 410 pixels
-//
 
 const int TILE_AREA_WIDTH =
     (12 * TILE_SIZE) +
@@ -34,14 +22,6 @@ const int TILE_AREA_HEIGHT =
     (BOARD_ROWS * TILE_SIZE) +
     ((BOARD_ROWS - 1) * ROAD_SIZE);
 
-
-// --------------------------------------------------
-// COMPLETE BOARD
-// --------------------------------------------------
-//
-// Add a 10px road around ALL four edges.
-//
-
 const int BOARD_WIDTH =
     TILE_AREA_WIDTH +
     (2 * ROAD_SIZE);
@@ -50,6 +30,10 @@ const int BOARD_HEIGHT =
     TILE_AREA_HEIGHT +
     (2 * ROAD_SIZE);
 
+
+// --------------------------------------------------
+// WINDOW PROCEDURE
+// --------------------------------------------------
 
 LRESULT CALLBACK WindowProc(
     HWND hwnd,
@@ -84,7 +68,7 @@ LRESULT CALLBACK WindowProc(
 
 
             // -----------------------------------------
-            // CENTER COMPLETE BOARD
+            // CENTER BOARD
             // -----------------------------------------
 
             int startX =
@@ -95,7 +79,7 @@ LRESULT CALLBACK WindowProc(
 
 
             // -----------------------------------------
-            // DRAW ENTIRE BOARD AS ROAD
+            // DRAW ROAD BACKGROUND
             // -----------------------------------------
 
             COLORREF roadColor =
@@ -127,10 +111,6 @@ LRESULT CALLBACK WindowProc(
             // -----------------------------------------
             // DRAW TILES
             // -----------------------------------------
-            //
-            // Start 10 pixels inside the board.
-            // This creates the outer road.
-            //
 
             int currentX =
                 startX + ROAD_SIZE;
@@ -138,7 +118,6 @@ LRESULT CALLBACK WindowProc(
 
             for (int col = 0; col < BOARD_COLS; col++)
             {
-                // Columns 7 and 8 are half-width
                 int columnWidth;
 
                 if (col == 6 || col == 7)
@@ -149,20 +128,38 @@ LRESULT CALLBACK WindowProc(
 
                 for (int row = 0; row < BOARD_ROWS; row++)
                 {
-                    // Start 10 pixels below the top edge.
-                    //
-                    // ROAD_SIZE between each row creates
-                    // the internal horizontal roads.
-
                     int y =
                         startY +
                         ROAD_SIZE +
                         row * (TILE_SIZE + ROAD_SIZE);
 
 
-                    // Tile color
-                    COLORREF color =
-                        RGB(240, 217, 181);
+                    // ---------------------------------
+                    // JACKSON SQUARE
+                    // ---------------------------------
+                    //
+                    // G6 and H6 together form
+                    // one 60 x 60 square.
+                    //
+
+                    bool isJacksonSquare =
+                        (row == 5 &&
+                         (col == 6 || col == 7));
+
+
+                    COLORREF color;
+
+
+                    if (isJacksonSquare)
+                    {
+                        // Jackson Square
+                        color = RGB(100, 150, 85);
+                    }
+                    else
+                    {
+                        // Normal building block
+                        color = RGB(240, 217, 181);
+                    }
 
 
                     HBRUSH brush =
@@ -189,14 +186,93 @@ LRESULT CALLBACK WindowProc(
                 }
 
 
-                // Move to the next column.
-                //
-                // The ROAD_SIZE creates the road
-                // between each column.
-
                 currentX +=
                     columnWidth + ROAD_SIZE;
             }
+
+
+            // -----------------------------------------
+            // LABEL JACKSON SQUARE
+            // -----------------------------------------
+            //
+            // G6 + H6 form one 60px wide area.
+            //
+
+            int jacksonX =
+                startX +
+                ROAD_SIZE +
+                (6 * (TILE_SIZE + ROAD_SIZE));
+
+            int jacksonY =
+                startY +
+                ROAD_SIZE +
+                (5 * (TILE_SIZE + ROAD_SIZE));
+
+
+            RECT jacksonRect =
+            {
+                jacksonX,
+                jacksonY,
+                jacksonX + TILE_SIZE,
+                jacksonY + TILE_SIZE
+            };
+
+
+            SetBkMode(
+                hdc,
+                TRANSPARENT
+            );
+
+
+            SetTextColor(
+                hdc,
+                RGB(255, 255, 255)
+            );
+
+
+            HFONT font =
+                CreateFont(
+                    11,
+                    0,
+                    0,
+                    0,
+                    FW_BOLD,
+                    FALSE,
+                    FALSE,
+                    FALSE,
+                    DEFAULT_CHARSET,
+                    OUT_DEFAULT_PRECIS,
+                    CLIP_DEFAULT_PRECIS,
+                    DEFAULT_QUALITY,
+                    DEFAULT_PITCH | FF_SWISS,
+                    "Arial"
+                );
+
+
+            HFONT oldFont =
+                (HFONT)SelectObject(
+                    hdc,
+                    font
+                );
+
+
+            DrawText(
+                hdc,
+                "JACKSON\nSQUARE",
+                -1,
+                &jacksonRect,
+                DT_CENTER |
+                DT_VCENTER |
+                DT_NOPREFIX
+            );
+
+
+            SelectObject(
+                hdc,
+                oldFont
+            );
+
+            DeleteObject(font);
 
 
             EndPaint(
@@ -204,13 +280,12 @@ LRESULT CALLBACK WindowProc(
                 &ps
             );
 
-
             return 0;
         }
 
 
         // -----------------------------------------
-        // KEEP BOARD CENTERED WHEN RESIZED
+        // RECENTER WHEN RESIZED
         // -----------------------------------------
 
         case WM_SIZE:
@@ -243,6 +318,10 @@ LRESULT CALLBACK WindowProc(
 }
 
 
+// --------------------------------------------------
+// WIN MAIN
+// --------------------------------------------------
+
 int WINAPI WinMain(
     HINSTANCE hInstance,
     HINSTANCE,
@@ -252,10 +331,6 @@ int WINAPI WinMain(
     const char CLASS_NAME[] =
         "BoardGame";
 
-
-    // -----------------------------------------
-    // WINDOW CLASS
-    // -----------------------------------------
 
     WNDCLASS wc = {};
 
@@ -274,10 +349,6 @@ int WINAPI WinMain(
 
     RegisterClass(&wc);
 
-
-    // -----------------------------------------
-    // WINDOW
-    // -----------------------------------------
 
     int windowWidth = 1200;
     int windowHeight = 700;
@@ -315,10 +386,6 @@ int WINAPI WinMain(
     UpdateWindow(hwnd);
 
 
-    // -----------------------------------------
-    // MESSAGE LOOP
-    // -----------------------------------------
-
     MSG msg = {};
 
 
@@ -329,11 +396,9 @@ int WINAPI WinMain(
         0))
     {
         TranslateMessage(&msg);
-
         DispatchMessage(&msg);
     }
 
 
     return 0;
 }
-
