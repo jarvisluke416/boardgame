@@ -2,13 +2,35 @@
 
 const int BOARD_COLS = 14;
 const int BOARD_ROWS = 6;
-const int TILE_SIZE = 70;
+
+const int TILE_SIZE = 60;
 const int HALF_TILE = TILE_SIZE / 2;
 
-// Board dimensions:
-// 12 full columns + 2 half columns
-const int BOARD_WIDTH = (12 * TILE_SIZE) + (2 * HALF_TILE);
-const int BOARD_HEIGHT = BOARD_ROWS * TILE_SIZE;
+const int ROAD_SIZE = 10;
+
+// Board dimensions
+//
+// Width:
+// 12 full tiles  = 12 * 60
+// 2 half tiles   = 2 * 30
+// 13 roads       = 13 * 10
+//
+// Total = 880 pixels
+//
+// Height:
+// 6 tiles        = 6 * 60
+// 5 roads        = 5 * 10
+//
+// Total = 410 pixels
+
+const int BOARD_WIDTH =
+    (12 * TILE_SIZE) +
+    (2 * HALF_TILE) +
+    ((BOARD_COLS - 1) * ROAD_SIZE);
+
+const int BOARD_HEIGHT =
+    (BOARD_ROWS * TILE_SIZE) +
+    ((BOARD_ROWS - 1) * ROAD_SIZE);
 
 
 LRESULT CALLBACK WindowProc(
@@ -24,16 +46,19 @@ LRESULT CALLBACK WindowProc(
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
 
-            // Get the EXACT drawable/client area
+            // Get the actual drawable area
             RECT clientRect;
             GetClientRect(hwnd, &clientRect);
 
-            int clientWidth = clientRect.right;
-            int clientHeight = clientRect.bottom;
+            int clientWidth =
+                clientRect.right - clientRect.left;
+
+            int clientHeight =
+                clientRect.bottom - clientRect.top;
 
 
             // -----------------------------------------
-            // PERFECTLY CENTER THE BOARD
+            // CENTER THE BOARD
             // -----------------------------------------
 
             int startX =
@@ -44,10 +69,37 @@ LRESULT CALLBACK WindowProc(
 
 
             // -----------------------------------------
-            // DRAW BOARD
+            // DRAW ROAD BACKGROUND
+            // -----------------------------------------
+
+            COLORREF roadColor = RGB(70, 70, 70);
+
+            HBRUSH roadBrush =
+                CreateSolidBrush(roadColor);
+
+            RECT boardArea =
+            {
+                startX,
+                startY,
+                startX + BOARD_WIDTH,
+                startY + BOARD_HEIGHT
+            };
+
+            FillRect(
+                hdc,
+                &boardArea,
+                roadBrush
+            );
+
+            DeleteObject(roadBrush);
+
+
+            // -----------------------------------------
+            // DRAW TILES
             // -----------------------------------------
 
             int currentX = startX;
+
 
             for (int col = 0; col < BOARD_COLS; col++)
             {
@@ -62,11 +114,13 @@ LRESULT CALLBACK WindowProc(
 
                 for (int row = 0; row < BOARD_ROWS; row++)
                 {
-                    int x = currentX;
-                    int y = startY + (row * TILE_SIZE);
+                    // Vertical position includes the road
+                    int y =
+                        startY +
+                        row * (TILE_SIZE + ROAD_SIZE);
 
 
-                    // Checkerboard colors
+                    // Alternate tile colors
                     COLORREF color;
 
                     if ((row + col) % 2 == 0)
@@ -81,9 +135,9 @@ LRESULT CALLBACK WindowProc(
 
                     RECT tile =
                     {
-                        x,
+                        currentX,
                         y,
-                        x + columnWidth,
+                        currentX + columnWidth,
                         y + TILE_SIZE
                     };
 
@@ -99,7 +153,12 @@ LRESULT CALLBACK WindowProc(
                 }
 
 
-                currentX += columnWidth;
+                // Move to the next column.
+                //
+                // The extra ROAD_SIZE creates
+                // the road between tiles.
+                currentX +=
+                    columnWidth + ROAD_SIZE;
             }
 
 
@@ -109,7 +168,7 @@ LRESULT CALLBACK WindowProc(
         }
 
 
-        // Repaint when the window is resized
+        // Recenter whenever the window changes size
         case WM_SIZE:
         {
             InvalidateRect(
@@ -153,6 +212,7 @@ int WINAPI WinMain(
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
+
     wc.hbrBackground =
         (HBRUSH)(COLOR_WINDOW + 1);
 
@@ -161,7 +221,7 @@ int WINAPI WinMain(
 
 
     // -----------------------------------------
-    // WINDOW SIZE
+    // WINDOW
     // -----------------------------------------
 
     int windowWidth = 1200;
@@ -216,3 +276,4 @@ int WINAPI WinMain(
 
     return 0;
 }
+
