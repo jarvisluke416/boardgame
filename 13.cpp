@@ -7,11 +7,12 @@ const int TILE_SIZE = 60;
 const int HALF_TILE = TILE_SIZE / 2;
 
 const int ROAD_SIZE = 10;
+const int SIDEWALK_SIZE = 3;
 
 
-// --------------------------------------------------
+// ==================================================
 // BOARD DIMENSIONS
-// --------------------------------------------------
+// ==================================================
 
 const int TILE_AREA_WIDTH =
     (12 * TILE_SIZE) +
@@ -31,9 +32,9 @@ const int BOARD_HEIGHT =
     (2 * ROAD_SIZE);
 
 
-// --------------------------------------------------
+// ==================================================
 // WINDOW PROCEDURE
-// --------------------------------------------------
+// ==================================================
 
 LRESULT CALLBACK WindowProc(
     HWND hwnd,
@@ -46,12 +47,14 @@ LRESULT CALLBACK WindowProc(
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
+
+            HDC hdc =
+                BeginPaint(hwnd, &ps);
 
 
-            // -----------------------------------------
-            // GET CLIENT AREA
-            // -----------------------------------------
+            // ==================================================
+            // CLIENT AREA
+            // ==================================================
 
             RECT clientRect;
 
@@ -61,15 +64,17 @@ LRESULT CALLBACK WindowProc(
             );
 
             int clientWidth =
-                clientRect.right - clientRect.left;
+                clientRect.right -
+                clientRect.left;
 
             int clientHeight =
-                clientRect.bottom - clientRect.top;
+                clientRect.bottom -
+                clientRect.top;
 
 
-            // -----------------------------------------
+            // ==================================================
             // CENTER BOARD
-            // -----------------------------------------
+            // ==================================================
 
             int startX =
                 (clientWidth - BOARD_WIDTH) / 2;
@@ -78,18 +83,17 @@ LRESULT CALLBACK WindowProc(
                 (clientHeight - BOARD_HEIGHT) / 2;
 
 
-            // -----------------------------------------
-            // DRAW ROAD BACKGROUND
-            // -----------------------------------------
-
-            COLORREF roadColor =
-                RGB(70, 70, 70);
+            // ==================================================
+            // ROAD BACKGROUND
+            // ==================================================
 
             HBRUSH roadBrush =
-                CreateSolidBrush(roadColor);
+                CreateSolidBrush(
+                    RGB(70, 70, 70)
+                );
 
 
-            RECT boardArea =
+            RECT boardRect =
             {
                 startX,
                 startY,
@@ -100,49 +104,64 @@ LRESULT CALLBACK WindowProc(
 
             FillRect(
                 hdc,
-                &boardArea,
+                &boardRect,
                 roadBrush
             );
 
 
-            DeleteObject(roadBrush);
+            DeleteObject(
+                roadBrush
+            );
 
 
-            // -----------------------------------------
-            // DRAW TILES
-            // -----------------------------------------
+            // ==================================================
+            // DRAW GRID
+            // ==================================================
 
             int currentX =
                 startX + ROAD_SIZE;
 
 
-            for (int col = 0; col < BOARD_COLS; col++)
+            for (int col = 0;
+                 col < BOARD_COLS;
+                 col++)
             {
                 int columnWidth;
 
+
+                // G and H are half-width.
                 if (col == 6 || col == 7)
-                    columnWidth = HALF_TILE;
+                {
+                    columnWidth =
+                        HALF_TILE;
+                }
                 else
-                    columnWidth = TILE_SIZE;
+                {
+                    columnWidth =
+                        TILE_SIZE;
+                }
 
 
-                for (int row = 0; row < BOARD_ROWS; row++)
+                for (int row = 0;
+                     row < BOARD_ROWS;
+                     row++)
                 {
                     int y =
                         startY +
                         ROAD_SIZE +
-                        row * (TILE_SIZE + ROAD_SIZE);
+                        row *
+                        (TILE_SIZE + ROAD_SIZE);
 
 
-                    // ---------------------------------
-                    // JACKSON SQUARE
-                    // ---------------------------------
+                    // ==================================================
+                    // G6 AND H6
+                    // ==================================================
                     //
-                    // G6 and H6 together form
-                    // one 60 x 60 square.
+                    // Both remain separate green blocks.
+                    // The 10px road between them remains visible.
                     //
 
-                    bool isJacksonSquare =
+                    bool jacksonSquare =
                         (row == 5 &&
                          (col == 6 || col == 7));
 
@@ -150,20 +169,22 @@ LRESULT CALLBACK WindowProc(
                     COLORREF color;
 
 
-                    if (isJacksonSquare)
+                    if (jacksonSquare)
                     {
-                        // Jackson Square
-                        color = RGB(100, 150, 85);
+                        color =
+                            RGB(100, 150, 85);
                     }
                     else
                     {
-                        // Normal building block
-                        color = RGB(240, 217, 181);
+                        color =
+                            RGB(240, 217, 181);
                     }
 
 
                     HBRUSH brush =
-                        CreateSolidBrush(color);
+                        CreateSolidBrush(
+                            color
+                        );
 
 
                     RECT tile =
@@ -182,41 +203,241 @@ LRESULT CALLBACK WindowProc(
                     );
 
 
-                    DeleteObject(brush);
+                    DeleteObject(
+                        brush
+                    );
                 }
 
 
+                // Move to next column.
                 currentX +=
-                    columnWidth + ROAD_SIZE;
+                    columnWidth +
+                    ROAD_SIZE;
             }
 
 
-            // -----------------------------------------
-            // LABEL JACKSON SQUARE
-            // -----------------------------------------
+            // ==================================================
+            // JACKSON SQUARE GEOMETRY
+            // ==================================================
             //
-            // G6 + H6 form one 60px wide area.
+            // G6 = 30px
+            // H6 = 30px
+            // Road = 10px
             //
+            // Total area = 70px wide.
+            //
+            // The CENTER is therefore exactly:
+            //
+            // G width 30
+            // + road 10
+            // + H width 30
+            //
+            // 70 / 2 = 35
+            // ==================================================
 
-            int jacksonX =
+
+            const int jacksonX =
                 startX +
                 ROAD_SIZE +
                 (6 * (TILE_SIZE + ROAD_SIZE));
 
-            int jacksonY =
+
+            const int jacksonY =
                 startY +
                 ROAD_SIZE +
                 (5 * (TILE_SIZE + ROAD_SIZE));
 
 
-            RECT jacksonRect =
-            {
-                jacksonX,
-                jacksonY,
-                jacksonX + TILE_SIZE,
-                jacksonY + TILE_SIZE
-            };
+            const int jacksonWidth =
+                HALF_TILE +
+                ROAD_SIZE +
+                HALF_TILE;
 
+
+            const int jacksonHeight =
+                TILE_SIZE;
+
+
+            // ==================================================
+            // EXACT CENTER
+            // ==================================================
+
+            const int centerX =
+                jacksonX +
+                (jacksonWidth / 2);
+
+
+            const int centerY =
+                jacksonY +
+                (jacksonHeight / 2);
+
+
+            // ==================================================
+            // SIDEWALK PEN
+            // ==================================================
+
+            HPEN sidewalkPen =
+                CreatePen(
+                    PS_SOLID,
+                    SIDEWALK_SIZE,
+                    RGB(225, 220, 200)
+                );
+
+
+            HPEN oldPen =
+                (HPEN)SelectObject(
+                    hdc,
+                    sidewalkPen
+                );
+
+
+            HBRUSH oldBrush =
+                (HBRUSH)SelectObject(
+                    hdc,
+                    GetStockObject(
+                        NULL_BRUSH
+                    )
+                );
+
+
+            // ==================================================
+            // VERTICAL SIDEWALK
+            // ==================================================
+            //
+            // IMPORTANT:
+            //
+            // This is centered INSIDE the 10px road
+            // between G6 and H6.
+            //
+            // Road:
+            //
+            //      30px       10px       30px
+            //    ┌────────┐ ┌────────┐ ┌────────┐
+            //    │        │ │  ROAD  │ │        │
+            //    │   G6   │ │   │    │ │   H6   │
+            //    │        │ │ SIDE-  │ │        │
+            //    │        │ │  WALK  │ │        │
+            //    └────────┘ └────────┘ └────────┘
+            //
+            // The sidewalk is 5px wide and centered
+            // inside the 10px road.
+            //
+
+            MoveToEx(
+                hdc,
+                centerX,
+                jacksonY,
+                NULL
+            );
+
+
+            LineTo(
+                hdc,
+                centerX,
+                jacksonY + jacksonHeight
+            );
+
+
+            // ==================================================
+            // HORIZONTAL SIDEWALK
+            // ==================================================
+            //
+            // This crosses the exact vertical center
+            // of Jackson Square.
+            //
+
+            MoveToEx(
+                hdc,
+                jacksonX,
+                centerY,
+                NULL
+            );
+
+
+            LineTo(
+                hdc,
+                jacksonX + jacksonWidth,
+                centerY
+            );
+
+
+            // ==================================================
+            // THREE CENTERED OVAL SIDEWALKS
+            // ==================================================
+
+            const int outerWidth = 46;
+            const int outerHeight = 28;
+
+            const int middleWidth = 34;
+            const int middleHeight = 20;
+
+            const int innerWidth = 22;
+            const int innerHeight = 12;
+
+
+            // ==================================================
+            // OUTER OVAL
+            // ==================================================
+
+            Ellipse(
+                hdc,
+                centerX - outerWidth / 2,
+                centerY - outerHeight / 2,
+                centerX + outerWidth / 2,
+                centerY + outerHeight / 2
+            );
+
+
+            // ==================================================
+            // MIDDLE OVAL
+            // ==================================================
+
+            Ellipse(
+                hdc,
+                centerX - middleWidth / 2,
+                centerY - middleHeight / 2,
+                centerX + middleWidth / 2,
+                centerY + middleHeight / 2
+            );
+
+
+            // ==================================================
+            // INNER OVAL
+            // ==================================================
+
+            Ellipse(
+                hdc,
+                centerX - innerWidth / 2,
+                centerY - innerHeight / 2,
+                centerX + innerWidth / 2,
+                centerY + innerHeight / 2
+            );
+
+
+            // ==================================================
+            // RESTORE GDI OBJECTS
+            // ==================================================
+
+            SelectObject(
+                hdc,
+                oldBrush
+            );
+
+
+            SelectObject(
+                hdc,
+                oldPen
+            );
+
+
+            DeleteObject(
+                sidewalkPen
+            );
+
+
+            // ==================================================
+            // JACKSON SQUARE LABEL
+            // ==================================================
 
             SetBkMode(
                 hdc,
@@ -232,7 +453,7 @@ LRESULT CALLBACK WindowProc(
 
             HFONT font =
                 CreateFont(
-                    11,
+                    9,
                     0,
                     0,
                     0,
@@ -256,13 +477,22 @@ LRESULT CALLBACK WindowProc(
                 );
 
 
+            RECT labelRect =
+            {
+                jacksonX,
+                jacksonY + 2,
+                jacksonX + jacksonWidth,
+                jacksonY + 14
+            };
+
+
             DrawText(
                 hdc,
-                "JACKSON\nSQUARE",
+                "JACKSON SQUARE",
                 -1,
-                &jacksonRect,
+                &labelRect,
                 DT_CENTER |
-                DT_VCENTER |
+                DT_SINGLELINE |
                 DT_NOPREFIX
             );
 
@@ -272,21 +502,29 @@ LRESULT CALLBACK WindowProc(
                 oldFont
             );
 
-            DeleteObject(font);
 
+            DeleteObject(
+                font
+            );
+
+
+            // ==================================================
+            // FINISH
+            // ==================================================
 
             EndPaint(
                 hwnd,
                 &ps
             );
 
+
             return 0;
         }
 
 
-        // -----------------------------------------
-        // RECENTER WHEN RESIZED
-        // -----------------------------------------
+        // ==================================================
+        // WINDOW RESIZED
+        // ==================================================
 
         case WM_SIZE:
         {
@@ -299,6 +537,10 @@ LRESULT CALLBACK WindowProc(
             return 0;
         }
 
+
+        // ==================================================
+        // WINDOW CLOSED
+        // ==================================================
 
         case WM_DESTROY:
         {
@@ -318,9 +560,9 @@ LRESULT CALLBACK WindowProc(
 }
 
 
-// --------------------------------------------------
+// ==================================================
 // WIN MAIN
-// --------------------------------------------------
+// ==================================================
 
 int WINAPI WinMain(
     HINSTANCE hInstance,
@@ -333,6 +575,7 @@ int WINAPI WinMain(
 
 
     WNDCLASS wc = {};
+
 
     wc.lpfnWndProc =
         WindowProc;
@@ -347,30 +590,40 @@ int WINAPI WinMain(
         (HBRUSH)(COLOR_WINDOW + 1);
 
 
-    RegisterClass(&wc);
-
-
-    int windowWidth = 1200;
-    int windowHeight = 700;
-
-
-    HWND hwnd = CreateWindowEx(
-        0,
-        CLASS_NAME,
-        "GameBoard",
-        WS_OVERLAPPEDWINDOW,
-
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-
-        windowWidth,
-        windowHeight,
-
-        NULL,
-        NULL,
-        hInstance,
-        NULL
+    RegisterClass(
+        &wc
     );
+
+
+    // ==================================================
+    // WINDOW
+    // ==================================================
+
+    const int windowWidth =
+        1200;
+
+    const int windowHeight =
+        700;
+
+
+    HWND hwnd =
+        CreateWindowEx(
+            0,
+            CLASS_NAME,
+            "GameBoard",
+            WS_OVERLAPPEDWINDOW,
+
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+
+            windowWidth,
+            windowHeight,
+
+            NULL,
+            NULL,
+            hInstance,
+            NULL
+        );
 
 
     if (hwnd == NULL)
@@ -383,22 +636,36 @@ int WINAPI WinMain(
     );
 
 
-    UpdateWindow(hwnd);
+    UpdateWindow(
+        hwnd
+    );
 
+
+    // ==================================================
+    // MESSAGE LOOP
+    // ==================================================
 
     MSG msg = {};
 
 
-    while (GetMessage(
-        &msg,
-        NULL,
-        0,
-        0))
+    while (
+        GetMessage(
+            &msg,
+            NULL,
+            0,
+            0
+        ))
     {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        TranslateMessage(
+            &msg
+        );
+
+        DispatchMessage(
+            &msg
+        );
     }
 
 
     return 0;
 }
+
