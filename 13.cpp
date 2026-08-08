@@ -1,8 +1,9 @@
 #include <windows.h>
 
-const int BOARD_COLS = 13;
+const int BOARD_COLS = 14;
 const int BOARD_ROWS = 6;
 const int TILE_SIZE = 70;
+const int HALF_TILE = TILE_SIZE / 2;
 
 LRESULT CALLBACK WindowProc(
     HWND hwnd,
@@ -24,23 +25,45 @@ LRESULT CALLBACK WindowProc(
             int clientWidth = clientRect.right - clientRect.left;
             int clientHeight = clientRect.bottom - clientRect.top;
 
-            // Calculate the total board size
-            int boardWidth = BOARD_COLS * TILE_SIZE;
+            // ------------------------------------------------
+            // Board layout
+            //
+            // Columns 1-6  = 70 pixels
+            // Column 7     = 35 pixels
+            // Column 8     = 35 pixels
+            // Columns 9-14 = 70 pixels
+            //
+            // Total width:
+            // 12 * 70 + 2 * 35 = 910 pixels
+            // ------------------------------------------------
+
+            int boardWidth = (12 * TILE_SIZE) + (2 * HALF_TILE);
             int boardHeight = BOARD_ROWS * TILE_SIZE;
 
-            // Center the board in the window
+            // Center the board
             int startX = (clientWidth - boardWidth) / 2;
             int startY = (clientHeight - boardHeight) / 2;
 
-            // Draw the board
-            for (int row = 0; row < BOARD_ROWS; row++)
+            // Current X position
+            int currentX = startX;
+
+            // Draw all 14 visual columns
+            for (int col = 0; col < BOARD_COLS; col++)
             {
-                for (int col = 0; col < BOARD_COLS; col++)
+                // Columns 7 and 8 are half-width
+                int columnWidth;
+
+                if (col == 6 || col == 7)
+                    columnWidth = HALF_TILE;
+                else
+                    columnWidth = TILE_SIZE;
+
+                for (int row = 0; row < BOARD_ROWS; row++)
                 {
-                    int x = startX + col * TILE_SIZE;
+                    int x = currentX;
                     int y = startY + row * TILE_SIZE;
 
-                    // Alternate tile colors
+                    // Alternate colors
                     COLORREF color;
 
                     if ((row + col) % 2 == 0)
@@ -54,7 +77,7 @@ LRESULT CALLBACK WindowProc(
                     {
                         x,
                         y,
-                        x + TILE_SIZE,
+                        x + columnWidth,
                         y + TILE_SIZE
                     };
 
@@ -62,6 +85,9 @@ LRESULT CALLBACK WindowProc(
 
                     DeleteObject(brush);
                 }
+
+                // Move to the next column
+                currentX += columnWidth;
             }
 
             EndPaint(hwnd, &ps);
@@ -101,8 +127,7 @@ int WINAPI WinMain(
 
     RegisterClass(&wc);
 
-    // Desired client area size.
-    // The board itself is 910 x 420.
+    // Window size
     int windowWidth = 1100;
     int windowHeight = 600;
 
@@ -145,5 +170,5 @@ int WINAPI WinMain(
     }
 
     return 0;
-}    
+}
 
