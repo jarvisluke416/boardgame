@@ -120,13 +120,7 @@ LRESULT CALLBACK WindowProc(
                         row * (TILE_SIZE + ROAD_SIZE);
 
 
-                    // Alternate tile colors
-                    COLORREF color;
-
-                    if ((row + col) % 2 == 0)
-                        color = RGB(240, 217, 181);
-                    else
-                        color = RGB(240, 217, 181);
+                    COLORREF color = RGB(240, 217, 181);
 
 
                     HBRUSH brush =
