@@ -14,19 +14,25 @@ void DrawJacksonSquare(
     // G6 = 30px
     // H6 = 30px
     //
-    // There is a 10px road between them.
+    // Road between G6 and H6 = 10px
     //
-    // Therefore:
+    // Total width:
     //
     // 30 + 10 + 30 = 70px
     //
-    // The vertical sidewalk is centered inside
-    // that 10px road.
+    // The top 5px of Jackson Square is road.
+    //
+    // Green area:
+    //
+    // 60 - 5 = 55px
     // ==================================================
 
 
+    const int ROAD_TOP_SIZE = 5;
+
+
     // ==================================================
-    // G6 POSITION
+    // G6 / H6 POSITION
     // ==================================================
 
     const int jacksonX =
@@ -42,15 +48,8 @@ void DrawJacksonSquare(
 
 
     // ==================================================
-    // JACKSON SQUARE WIDTH
+    // JACKSON SQUARE DIMENSIONS
     // ==================================================
-    //
-    // G = 30
-    // Road = 10
-    // H = 30
-    //
-    // Total = 70
-    //
 
     const int jacksonWidth =
         HALF_TILE +
@@ -59,11 +58,21 @@ void DrawJacksonSquare(
 
 
     const int jacksonHeight =
-        TILE_SIZE;
+        TILE_SIZE -
+        ROAD_TOP_SIZE;
 
 
     // ==================================================
-    // DRAW G6 AND H6 GREEN
+    // GREEN AREA START
+    // ==================================================
+
+    const int greenY =
+        jacksonY +
+        ROAD_TOP_SIZE;
+
+
+    // ==================================================
+    // DRAW GREEN AREAS
     // ==================================================
 
     HBRUSH greenBrush =
@@ -72,12 +81,14 @@ void DrawJacksonSquare(
         );
 
 
+    // ==================================================
     // G6
+    // ==================================================
 
     RECT g6 =
     {
         jacksonX,
-        jacksonY,
+        greenY,
         jacksonX + HALF_TILE,
         jacksonY + TILE_SIZE
     };
@@ -90,14 +101,25 @@ void DrawJacksonSquare(
     );
 
 
+    // ==================================================
     // H6
+    // ==================================================
 
     RECT h6 =
     {
-        jacksonX + HALF_TILE + ROAD_SIZE,
-        jacksonY,
-        jacksonX + HALF_TILE + ROAD_SIZE + HALF_TILE,
-        jacksonY + TILE_SIZE
+        jacksonX +
+            HALF_TILE +
+            ROAD_SIZE,
+
+        greenY,
+
+        jacksonX +
+            HALF_TILE +
+            ROAD_SIZE +
+            HALF_TILE,
+
+        jacksonY +
+            TILE_SIZE
     };
 
 
@@ -114,14 +136,21 @@ void DrawJacksonSquare(
 
 
     // ==================================================
-    // JACKSON SQUARE CENTER
+    // CENTER OF JACKSON SQUARE
     // ==================================================
     //
-    // The center is the center of the 10px road
-    // between G6 and H6.
+    // Horizontal center:
     //
     // 30 + 5 = 35
     //
+    // This is exactly the center of the
+    // 10px road between G6 and H6.
+    //
+    // Vertical center:
+    //
+    // Green area = 55px
+    //
+    // ==================================================
 
     const int centerX =
         jacksonX +
@@ -130,7 +159,7 @@ void DrawJacksonSquare(
 
 
     const int centerY =
-        jacksonY +
+        greenY +
         (jacksonHeight / 2);
 
 
@@ -166,13 +195,17 @@ void DrawJacksonSquare(
     // VERTICAL SIDEWALK
     // ==================================================
     //
-    // Runs through the road between G6 and H6.
+    // Runs from the top of the green area
+    // to the bottom of Jackson Square.
     //
+    // It is centered inside the 10px road
+    // separating G6 and H6.
+    // ==================================================
 
     MoveToEx(
         hdc,
         centerX,
-        jacksonY,
+        greenY,
         NULL
     );
 
@@ -180,7 +213,7 @@ void DrawJacksonSquare(
     LineTo(
         hdc,
         centerX,
-        jacksonY + jacksonHeight
+        jacksonY + TILE_SIZE
     );
 
 
@@ -188,8 +221,9 @@ void DrawJacksonSquare(
     // HORIZONTAL SIDEWALK
     // ==================================================
     //
-    // Runs through the center of the square.
-    //
+    // Runs through the center of the
+    // 55px green area.
+    // ==================================================
 
     MoveToEx(
         hdc,
@@ -325,9 +359,9 @@ void DrawJacksonSquare(
     RECT labelRect =
     {
         jacksonX,
-        jacksonY + 2,
+        greenY + 2,
         jacksonX + jacksonWidth,
-        jacksonY + 14
+        greenY + 14
     };
 
 
