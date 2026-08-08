@@ -126,7 +126,7 @@ LRESULT CALLBACK WindowProc(
                     if ((row + col) % 2 == 0)
                         color = RGB(240, 217, 181);
                     else
-                        color = RGB(181, 136, 99);
+                        color = RGB(240, 217, 181);
 
 
                     HBRUSH brush =
@@ -231,7 +231,7 @@ int WINAPI WinMain(
     HWND hwnd = CreateWindowEx(
         0,
         CLASS_NAME,
-        "My Board Game",
+        "GameBoard",
         WS_OVERLAPPEDWINDOW,
 
         CW_USEDEFAULT,
